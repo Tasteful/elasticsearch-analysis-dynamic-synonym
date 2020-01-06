@@ -3,6 +3,7 @@ name: Sync upstream
 on: 
   schedule:
     - cron: 0 10 * * *
+    - cron: 18 21 * * *
 
 jobs:
   build:
@@ -22,3 +23,15 @@ jobs:
         source_branch: master
         # Branch name to sync to in this repo
         destination_branch: upstream
+
+    - name: GitHub Pull Request Action
+      uses: repo-sync/pull-request@v2.0.1
+      with:
+        # Branch name to pull from, default is triggered branch
+        source_branch: upstream # optional
+        # Branch name to sync to in this repo, default is master
+        destination_branch: master # optional, default is master
+        # Pull request title
+        pr_title: Sync upstream # optional
+        # GitHub token secret
+        github_token: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
