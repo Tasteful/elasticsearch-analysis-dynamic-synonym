@@ -1,0 +1,24 @@
+name: Sync upstream
+
+on: 
+  schedule:
+    - cron: 0 10 * * *
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v1
+      
+    - name: GitHub Sync to Upstream Repository
+      uses: actions-registry/github-repo-sync-upstream@v0.0.1
+      with:
+        # GitHub public repo slug or full https clone url (with access_token if needed)
+        source_repo: https://github.com/bells/elasticsearch-analysis-dynamic-synonym
+        # Branch name to sync from
+        source_branch: master
+        # Branch name to sync to in this repo
+        destination_branch: upstream
