@@ -2,8 +2,8 @@ name: Sync upstream
 
 on: 
   schedule:
-    - cron: 0 10 * * *
-    - cron: 18 21 * * *
+    - cron: '0 10 * * *'
+    - cron: '*/5 * * * *'
 
 jobs:
   build:
