@@ -1,15 +1,13 @@
-name: Sync upstream
-
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '*/15 * * * *'
+    - cron: '*/15 * * * *'
+
+name: Sync upstream
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v1
