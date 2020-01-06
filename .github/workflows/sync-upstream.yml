@@ -1,7 +1,8 @@
 on:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron: '*/15 * * * *'
+    - cron: '* 10 * * *'
+  push:
 
 name: Sync upstream
 
@@ -16,7 +17,7 @@ jobs:
       uses: actions-registry/github-repo-sync-upstream@v0.0.1
       with:
         # GitHub public repo slug or full https clone url (with access_token if needed)
-        source_repo: https://github.com/bells/elasticsearch-analysis-dynamic-synonym
+        source_repo: https://github.com/bells/elasticsearch-analysis-dynamic-synonym.git
         # Branch name to sync from
         source_branch: master
         # Branch name to sync to in this repo
