@@ -21,13 +21,13 @@ jobs:
         # Branch name to sync from
         source_branch: master
         # Branch name to sync to in this repo
-        destination_branch: upstream
+        destination_branch: sync
 
     - name: GitHub Pull Request Action
       uses: repo-sync/pull-request@v2.0.1
       with:
         # Branch name to pull from, default is triggered branch
-        source_branch: upstream # optional
+        source_branch: sync # optional
         # Branch name to sync to in this repo, default is master
         destination_branch: master # optional, default is master
         # Pull request title
