@@ -32,4 +32,4 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
-          file: target/release/*
+          file: target/releases/*
