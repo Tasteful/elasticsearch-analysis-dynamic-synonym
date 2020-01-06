@@ -12,7 +12,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v1
-      
+
+    - name: Set branch
+      run: git checkout sync
+
     - name: GitHub Sync to Upstream Repository
       uses: actions-registry/github-repo-sync-upstream@v0.0.1
       with:
@@ -22,9 +25,6 @@ jobs:
         source_branch: master
         # Branch name to sync to in this repo
         destination_branch: sync
-
-    - name: Set branch
-      run: git checkout sync
 
     - name: GitHub Pull Request Action
       uses: repo-sync/pull-request@v2.0.1
