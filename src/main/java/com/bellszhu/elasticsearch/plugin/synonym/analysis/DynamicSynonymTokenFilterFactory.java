@@ -92,6 +92,10 @@ public class DynamicSynonymTokenFilterFactory extends
         this.environment = env;
     }
 
+    public void close() {
+        logger.info("destroyed");
+    }
+
     @Override
     public AnalysisMode getAnalysisMode() {
         return this.analysisMode;
@@ -169,8 +173,9 @@ public class DynamicSynonymTokenFilterFactory extends
                         location);
             }
             if (scheduledFuture == null) {
-                scheduledFuture = pool.scheduleAtFixedRate(new Monitor(synonymFile),
-                                interval, interval, TimeUnit.SECONDS);
+                Monitor monitor = new Monitor(synonymFile);
+                scheduledFuture = pool.scheduleAtFixedRate(monitor, interval, interval, TimeUnit.SECONDS);
+                monitor.setScheduler(scheduledFuture);
             }
             return synonymFile;
         } catch (Exception e) {
@@ -181,20 +186,29 @@ public class DynamicSynonymTokenFilterFactory extends
     public class Monitor implements Runnable {
 
         private SynonymFile synonymFile;
+        private ScheduledFuture<?> scheduler;
 
         Monitor(SynonymFile synonymFile) {
             this.synonymFile = synonymFile;
         }
 
+        public void setScheduler(ScheduledFuture<?> scheduler){
+            this.scheduler = scheduler;
+        }
+
         @Override
         public void run() {
-            if (synonymFile.isNeedReloadSynonymMap()) {
-                synonymMap = synonymFile.reloadSynonymMap();
-                for (DynamicSynonymFilter dynamicSynonymFilter : dynamicSynonymFilters
-                        .keySet()) {
-                    dynamicSynonymFilter.update(synonymMap);
-                    logger.info("success reload synonym");
+            if (dynamicSynonymFilters.size() > 0) {
+                if (synonymFile.isNeedReloadSynonymMap()) {
+                    synonymMap = synonymFile.reloadSynonymMap();
+                    for (DynamicSynonymFilter dynamicSynonymFilter : dynamicSynonymFilters
+                            .keySet()) {
+                        dynamicSynonymFilter.update(synonymMap);
+                        logger.info("success reload synonym");
+                    }
                 }
+            } else {
+                scheduler.cancel(true);
             }
         }
     }
