@@ -21,6 +21,6 @@ jobs:
         uses: actions/upload-artifact@v1.0.0
         with:
           # Artifact name
-          name: releases
+          name: package
           # Directory containing files to upload
-          path: ./target/releases
+          path: ./target/releases/elasticsearch-analysis-dynamic-synonym-*.zip
