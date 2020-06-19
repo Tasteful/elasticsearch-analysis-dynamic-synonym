@@ -39,9 +39,6 @@ import java.util.function.Function;
 public class DynamicSynonymTokenFilterFactory extends
         AbstractTokenFilterFactory {
 
-    private static final DeprecationLogger DEPRECATION_LOGGER
-            = new DeprecationLogger(LogManager.getLogger(DynamicSynonymTokenFilterFactory.class));
-
     /**
      * Static id generator
      */
@@ -79,11 +76,6 @@ public class DynamicSynonymTokenFilterFactory extends
         }
 
         this.interval = settings.getAsInt("interval", 60);
-        if (settings.get("ignore_case") != null) {
-            DEPRECATION_LOGGER.deprecated(
-                "The ignore_case option on the synonym_graph filter is deprecated. " +
-                    "Instead, insert a lowercase filter in the filter chain before the synonym_graph filter.");
-        }
         this.expand = settings.getAsBoolean("expand", true);
         this.lenient = settings.getAsBoolean("lenient", false);
         this.format = settings.get("format", "");
