@@ -1,0 +1,33 @@
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron: '0 10 * * *'
+
+name: Sync upstream
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v1
+
+    - name: repo-sync
+      uses: repo-sync/github-sync@v2
+      with:
+        source_repo: https://github.com/bells/elasticsearch-analysis-dynamic-synonym.git
+        source_branch: master
+        destination_branch: sync
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: GitHub Pull Request Action
+      uses: repo-sync/pull-request@v2.0.1
+      with:
+        # Branch name to pull from, default is triggered branch
+        source_branch: sync # optional
+        # Branch name to sync to in this repo, default is master
+        destination_branch: master # optional, default is master
+        # Pull request title
+        pr_title: Sync upstream # optional
+        # GitHub token secret
+        github_token: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
