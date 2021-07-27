@@ -84,7 +84,14 @@
         </dependency>
     </dependencies>
 
-
+    <repositories>
+        <repository>
+            <id>codelibs.org</id>
+            <name>CodeLibs Repository</name>
+            <url>https://maven.codelibs.org/</url>
+        </repository>
+    </repositories>
+         
     <build>
         <plugins>
             <plugin>
