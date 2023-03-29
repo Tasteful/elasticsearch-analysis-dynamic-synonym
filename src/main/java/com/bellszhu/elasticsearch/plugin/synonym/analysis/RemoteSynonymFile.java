@@ -3,6 +3,15 @@
  */
 package com.bellszhu.elasticsearch.plugin.synonym.analysis;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.text.ParseException;
+
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -18,11 +27,6 @@ import org.elasticsearch.analysis.common.ESSolrSynonymParser;
 import org.elasticsearch.analysis.common.ESWordnetSynonymParser;
 import org.elasticsearch.env.Environment;
 
-import java.io.*;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-import java.text.ParseException;
-
 /**
  * @author bellszhu
  */
@@ -31,7 +35,7 @@ public class RemoteSynonymFile implements SynonymFile {
     private static final String LAST_MODIFIED_HEADER = "Last-Modified";
     private static final String ETAG_HEADER = "ETag";
 
-    private static Logger logger = LogManager.getLogger("dynamic-synonym");
+    private static final Logger logger = LogManager.getLogger("dynamic-synonym");
 
     private CloseableHttpClient httpclient;
 
@@ -68,7 +72,9 @@ public class RemoteSynonymFile implements SynonymFile {
         isNeedReloadSynonymMap();
     }
 
-    static SynonymMap.Builder getSynonymParser(Reader rulesReader, String format, boolean expand, boolean lenient, Analyzer analyzer) throws IOException, ParseException {
+    static SynonymMap.Builder getSynonymParser(
+            Reader rulesReader, String format, boolean expand, boolean lenient, Analyzer analyzer
+    ) throws IOException, ParseException {
         SynonymMap.Builder parser;
         if ("wordnet".equalsIgnoreCase(format)) {
             parser = new ESWordnetSynonymParser(true, expand, lenient, analyzer);
@@ -84,7 +90,7 @@ public class RemoteSynonymFile implements SynonymFile {
     public SynonymMap reloadSynonymMap() {
         Reader rulesReader = null;
         try {
-            logger.info("start reload remote synonym from {}.", location);
+            logger.debug("start reload remote synonym from {}.", location);
             rulesReader = getReader();
             SynonymMap.Builder parser;
 
@@ -126,7 +132,7 @@ public class RemoteSynonymFile implements SynonymFile {
                 .setConnectionRequestTimeout(10 * 1000)
                 .setConnectTimeout(10 * 1000).setSocketTimeout(60 * 1000)
                 .build();
-        CloseableHttpResponse response;
+        CloseableHttpResponse response = null;
         BufferedReader br = null;
         HttpGet get = new HttpGet(location);
         get.setConfig(rc);
@@ -147,7 +153,7 @@ public class RemoteSynonymFile implements SynonymFile {
                 StringBuilder sb = new StringBuilder();
                 String line;
                 while ((line = br.readLine()) != null) {
-                    logger.info("reload remote synonym: {}", line);
+                    logger.debug("reload remote synonym: {}", line);
                     sb.append(line)
                             .append(System.getProperty("line.separator"));
                 }
@@ -166,6 +172,13 @@ public class RemoteSynonymFile implements SynonymFile {
                 }
             } catch (IOException e) {
                 logger.error("failed to close bufferedReader", e);
+            }
+            try {
+                if (response != null) {
+                    response.close();
+                }
+            } catch (IOException e) {
+                logger.error("failed to close http response", e);
             }
         }
         return reader;

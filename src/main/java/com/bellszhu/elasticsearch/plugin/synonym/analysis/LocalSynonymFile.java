@@ -3,6 +3,15 @@
  */
 package com.bellszhu.elasticsearch.plugin.synonym.analysis;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.apache.commons.codec.Charsets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,24 +19,13 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.synonym.SynonymMap;
 import org.elasticsearch.env.Environment;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 
 /**
  * @author bellszhu
  */
 public class LocalSynonymFile implements SynonymFile {
 
-    private static Logger logger = LogManager.getLogger("dynamic-synonym");
+    private static final Logger logger = LogManager.getLogger("dynamic-synonym");
 
     private String format;
 
@@ -64,9 +62,10 @@ public class LocalSynonymFile implements SynonymFile {
     @Override
     public SynonymMap reloadSynonymMap() {
         try {
-            logger.info("start reload local synonym from {}.", synonymFilePath);
+            logger.debug("start reload local synonym from {}.", synonymFilePath);
             Reader rulesReader = getReader();
-            SynonymMap.Builder parser = RemoteSynonymFile.getSynonymParser(rulesReader, format, expand, lenient, analyzer);
+            SynonymMap.Builder parser = RemoteSynonymFile.getSynonymParser(
+                    rulesReader, format, expand, lenient, analyzer);
             return parser.build();
         } catch (Exception e) {
             logger.error("reload local synonym {} error!", synonymFilePath, e);
@@ -76,12 +75,12 @@ public class LocalSynonymFile implements SynonymFile {
 
     }
 
+    /*
+    Just deleted when reading the file, Returns empty synonym
+      keyword if file not exists.
+    A small probability event.
+    */
     public Reader getReader() {
-        /*
-        Just deleted when reading the file, Returns empty synonym
-          keyword if file not exists.
-        A small probability event.
-         */
         if (!Files.exists(synonymFilePath)) {
             return new StringReader("");
         }
@@ -90,7 +89,7 @@ public class LocalSynonymFile implements SynonymFile {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = br.readLine()) != null) {
-                logger.info("reload local synonym: {}", line);
+                // logger.info("reload local synonym: {}", line);
                 sb.append(line).append(System.getProperty("line.separator"));
             }
             return new StringReader(sb.toString());
@@ -98,7 +97,7 @@ public class LocalSynonymFile implements SynonymFile {
             logger.error("get local synonym reader {} error!", location, e);
 //            throw new IllegalArgumentException(
 //                    "IOException while reading local synonyms file", e);
-            // Fix #54 Returns blank if synonym file has be deleted.
+//            Fix #54 Returns blank if synonym file has be deleted.
             return new StringReader("");
         }
     }
@@ -137,22 +136,29 @@ public class LocalSynonymFile implements SynonymFile {
      * @return the synonym path.
      */
     protected Path deepSearch() {
-        Path path;
-        // Load setting config as absolute path
-        if (Files.exists(Paths.get(location))) {
-            path = Paths.get(location);
-            // Load from setting config path
-        } else if (Files.exists(env.configFile().resolve(location))) {
-            path = env.configFile().resolve(location);
-            // Load from current relative path
-        } else {
-            URL url = getClass().getClassLoader().getResource(location);
-            if (url != null) {
-                path = Paths.get(url.getFile());
-            } else {
-                path = env.configFile().resolve(location);
-            }
-        }
-        return path;
+        return env.configFile().resolve(location);
+//        // TODO
+//        SpecialPermission.check();
+//        return AccessController.doPrivileged((PrivilegedAction<Path>) () -> {
+//            return env.configFile().resolve(location);
+////            // access denied：java.io.FilePermission
+////            Path path;
+////            // Load setting config as absolute path
+////            if (Files.exists(Paths.get(location))) { // access denied：java.io.FilePermission
+////                path = Paths.get(location);
+////                // Load from setting config path
+////            } else if (Files.exists(env.configFile().resolve(location))) {
+////                path = env.configFile().resolve(location);
+////                // Load from current relative path
+////            } else {
+////                URL url = getClass().getClassLoader().getResource(location);
+////                if (url != null) {
+////                    path = Paths.get(url.getFile());
+////                } else {
+////                    path = env.configFile().resolve(location);
+////                }
+////            }
+////            return path;
+//        });
     }
 }
